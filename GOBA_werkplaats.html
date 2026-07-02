@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOBA Werkplaats</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1A1916;--surface:#242220;--surface2:#2E2C29;
+  --border:#3A3834;--border-strong:#4A4844;
+  --text:#F5F4F0;--text2:#A8A59E;--text3:#6B6860;
+  --green:#4CAF50;--green-bg:#1B3A1C;--green-text:#81C784;
+  --red:#EF5350;--red-bg:#3A1A1A;--red-text:#EF9A9A;
+  --yellow-bg:#2A2500;
+  --blue:#64B5F6;--blue-bg:#1A2A3A;
+  --orange:#FFB74D;--orange-bg:#2A1A00;
+  --radius:10px;--radius-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;line-height:1.5}
+
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:40px;height:40px;background:var(--text);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:22px;height:22px;stroke:#1A1916;fill:none;stroke-width:2.5}
+.logo-name{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.logo-sub{font-size:13px;color:var(--text2);margin-left:6px;background:var(--surface2);padding:3px 10px;border-radius:20px;border:1px solid var(--border)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.week-pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text2);font-family:'DM Mono',monospace}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* NAAM MODAL */
+.naam-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:flex;align-items:center;justify-content:center}
+.naam-modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem;width:480px;max-width:90vw;box-shadow:0 30px 80px rgba(0,0,0,0.5)}
+.naam-modal h2{font-size:24px;font-weight:800;margin-bottom:8px}
+.naam-modal p{font-size:15px;color:var(--text2);margin-bottom:2rem}
+.naam-modal select{width:100%;padding:14px 18px;border-radius:var(--radius);border:2px solid var(--border);background:var(--surface2);color:var(--text);font-size:18px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:1rem}
+.naam-modal select:focus{border-color:var(--green)}
+.naam-modal button{width:100%;padding:14px;border-radius:var(--radius);border:none;background:var(--green);color:#1A1916;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer}
+
+.main{max-width:1600px;margin:0 auto;padding:1.5rem 2rem}
+
+.filter-balk{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.2rem 1.5rem;margin-bottom:1.5rem;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.zoek-veld{flex:1;min-width:200px;padding:10px 16px;border-radius:var(--radius);border:2px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;outline:none}
+.zoek-veld:focus{border-color:var(--green)}
+.zoek-veld::placeholder{color:var(--text3)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius);border:2px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;font-weight:600;white-space:nowrap}
+.btn:hover{background:var(--border);transform:translateY(-1px)}
+.btn.active{background:var(--green);color:#1A1916;border-color:var(--green);box-shadow:0 3px 8px rgba(76,175,80,0.4);transform:translateY(-1px);font-weight:700}
+#btnOverdue.active{background:#EF5350!important;color:white!important;border-color:#EF5350!important;box-shadow:0 3px 8px rgba(239,83,80,0.4)!important}
+#btnMetag.active{background:#EF5350!important;color:white!important;border-color:#EF5350!important;box-shadow:0 3px 8px rgba(239,83,80,0.4)!important}
+#btnMonth.active{background:#F9A825!important;color:#1A1916!important;border-color:#F9A825!important;box-shadow:0 3px 8px rgba(249,168,37,0.4)!important}
+.naam-tag{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:14px;color:var(--text2);cursor:pointer}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px}
+.stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.stat-value{font-size:28px;font-weight:800;letter-spacing:-1px}
+.stat-value.green{color:var(--green-text)}
+.stat-value.red{color:var(--red-text)}
+.stat-value.blue{color:var(--blue)}
+
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{background:var(--surface2);padding:12px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+
+.customer-row td{background:#2A2825!important;font-size:13px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;padding:8px 16px;border-top:1px solid var(--border-strong)}
+.project-row td{background:#1E2A1E!important;padding:5px 16px;border-top:1px solid var(--border)}
+.proj-num{font-size:13px;font-weight:700;color:var(--green-text);font-family:'DM Mono',monospace}
+.proj-name{font-size:12px;color:#4CAF50;font-style:italic}
+.highlight-month td{background:#2A2500!important}
+.overdue-datum{color:var(--red-text)!important;font-weight:700!important}
+.new-badge{display:inline-block;background:#2A1A00;color:var(--orange);font-size:10px;padding:2px 7px;border-radius:4px;margin-left:6px;font-weight:700;text-transform:uppercase}
+
+.jn-badge{display:inline-block;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace}
+.jn-jj{background:var(--green-bg);color:var(--green-text)}
+.jn-jn{background:var(--red-bg);color:var(--red-text)}
+.jn-nj{background:var(--orange-bg);color:var(--orange)}
+.jn-empty{color:var(--text3)}
+
+.status-badge{display:inline-block;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace}
+.s6{background:var(--orange-bg);color:var(--orange)}
+.s7{background:var(--blue-bg);color:var(--blue)}
+.s8{background:var(--green-bg);color:var(--green-text)}
+.s9{background:#2A1A3A;color:#CE93D8}
+.sX{background:var(--surface2);color:var(--text2)}
+
+.ws-bezig td{background:#2A1A00!important}
+.ws-gereed td{background:#1B3A1C!important}
+.ws-wacht td{background:#2A1A3A!important}
+.ws-bezig .medew{color:var(--orange)!important}
+.ws-gereed .medew{color:var(--green-text)!important}
+.ws-wacht .medew{color:#CE93D8!important}
+
+.empty-state{text-align:center;padding:5rem 2rem;color:var(--text2)}
+
+/* NOTITIE POPUP */
+.notitie-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;display:none;align-items:center;justify-content:center}
+.notitie-overlay.open{display:flex}
+.notitie-modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;width:440px;max-width:90vw}
+.notitie-modal h3{font-size:15px;font-weight:700;margin-bottom:3px}
+.notitie-modal .sub{font-size:12px;color:var(--text2);margin-bottom:12px}
+.notitie-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);margin-bottom:5px}
+.notitie-modal textarea{width:100%;height:80px;padding:10px;border-radius:var(--radius);border:2px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none}
+.notitie-modal textarea:focus{border-color:var(--green)}
+.notitie-readonly{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:13px;color:var(--text);min-height:36px;margin-bottom:4px}
+.notitie-knoppen{display:flex;gap:8px;margin-top:12px}
+.notitie-knoppen .opslaan{flex:1;padding:12px;border-radius:var(--radius);border:none;background:var(--green);color:#1A1916;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer}
+.notitie-knoppen .annuleer{padding:12px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- Naam modal -->
+<div class="naam-overlay" id="naamOverlay">
+  <div class="naam-modal">
+    <h2>🔧 GOBA Werkplaats</h2>
+    <p>Kies je naam om je klussen te zien.</p>
+    <select id="naamSelect">
+      <option value="">— Kies je naam —</option>
+      <option value="AA">1001 — AA</option>
+      <option value="JvA">1002 — JvA</option>
+      <option value="SvW">1036 — SvW</option>
+      <option value="SdV">1006 — SdV</option>
+      <option value="PdR">1041 — PdR</option>
+      <option value="RC">1042 — RC</option>
+      <option value="RH">1035 — RH</option>
+      <option value="JdM">1022 — JdM</option>
+      <option value="HJ">1005 — HJ</option>
+      <option value="AM">1011 — AM</option>
+    </select>
+    <button onclick="slaaNaamOp()">Naar de planning →</button>
+  </div>
+</div>
+
+<!-- Notitie popup -->
+<div class="notitie-overlay" id="notitieOverlay">
+  <div class="notitie-modal">
+    <h3 id="notitieTitle"></h3>
+    <div class="sub" id="notitieSubtitle"></div>
+    <div class="notitie-label">🔧 Jouw werkplaats notitie</div>
+    <textarea id="notitieWpInput" placeholder="Typ hier je werkplaats notitie…"></textarea>
+    <div id="kantoorNotitieWrap" style="display:none;margin-top:10px">
+      <div class="notitie-label" style="margin-bottom:5px">📋 Kantoor notitie (alleen lezen)</div>
+      <div class="notitie-readonly" id="kantoorNotitieText"></div>
+    </div>
+    <div class="notitie-knoppen">
+      <button class="opslaan" onclick="slaNotitieWpOp()">Opslaan</button>
+      <button class="annuleer" onclick="sluitNotitie()">Annuleren</button>
+    </div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
+    <span class="logo-name">GOBA</span>
+    <span class="logo-sub">Werkplaats Planning</span>
+  </div>
+  <div class="topbar-right">
+    <div class="week-pill" id="weekPill" style="display:none"></div>
+    <span class="sync-dot" id="syncDot"></span>
+    <span class="naam-tag" id="naamTag" onclick="wijzigNaam()"></span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="filter-balk">
+    <button class="btn active" id="btnAll" onclick="setFilter('all',this)">Alles</button>
+    <button class="btn" id="btnMonth" onclick="setFilter('month',this)">🗓 Deze maand</button>
+    <button class="btn" id="btnMetag" onclick="setFilter('metag',this)">⏳ Bij MeTaG</button>
+    <button class="btn" id="btnOverdue" onclick="setFilter('overdue',this)">🔴 Verlopen</button>
+    <button class="btn" id="btnMijn" onclick="setFilter('mijn',this)">⭐ Mijn klussen</button>
+    <button class="btn" id="btnSortDatum" onclick="toggleSortDatum(this)">↕ Datum</button>
+    <input type="text" class="zoek-veld" id="zoekNaam" placeholder="🔍 Zoek medewerker…" oninput="applyFilter()">
+    <input type="text" class="zoek-veld" id="zoekOmsch" placeholder="🔍 Zoek klant / omschrijving…" oninput="applyFilter()" style="flex:2">
+    <input type="text" class="zoek-veld" id="zoekWerkbon" placeholder="🔍 Werkbonnummer…" oninput="applyFilter()" style="flex:1;max-width:160px">
+    <button class="btn" onclick="openQR()" style="background:#1B3A1C;color:#81C784;border-color:#4CAF50;white-space:nowrap">📷 Scan bon</button>
+  </div>
+
+  <!-- Legenda -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;margin-bottom:1rem;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text2)">
+    <strong style="color:var(--text);font-size:13px">Actie knoppen:</strong>
+    <span><span style="background:#2A1A00;color:#FFB74D;border:1.5px solid #FFB74D;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">⚡ Pak op</span> = ik pak deze klus op</span>
+    <span><span style="background:#2A1A3A;color:#CE93D8;border:1.5px solid #CE93D8;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">⏸</span> = ik wacht even</span>
+    <span><span style="background:#1B3A1C;color:#81C784;border:1.5px solid #4CAF50;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">✅</span> = klus is klaar voor levering</span>
+    <span><span style="background:#3A1A1A;color:#EF9A9A;border:1.5px solid #EF5350;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">↩</span> = klus doorgeven / vrijgeven</span>
+    <span style="margin-left:8px;padding-left:8px;border-left:1px solid var(--border)"><span style="background:#3A1A1A;color:#EF9A9A;border:1px solid #EF5350;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600">📝 !</span> = notitie aanwezig</span>
+    <span><span style="border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;color:var(--text3)">📝</span> = notitie toevoegen</span>
+  </div>
+
+  <!-- QR Scanner popup -->
+  <div id="qrOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:400;align-items:center;justify-content:center;flex-direction:column">
+    <div style="background:var(--surface);border-radius:var(--radius-lg);padding:1.5rem;width:360px;max-width:90vw;text-align:center">
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px">📷 Scan werkbon</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Houd de QR code voor de camera</div>
+      <video id="qrVideo" style="width:100%;border-radius:8px;background:#000;max-height:250px" autoplay playsinline></video>
+      <canvas id="qrCanvas" style="display:none"></canvas>
+      <div id="qrStatus" style="margin-top:10px;font-size:13px;color:var(--text2)">Camera laden…</div>
+      <button onclick="sluitQR()" style="margin-top:12px;width:100%;padding:10px;border-radius:var(--radius);border:none;background:var(--surface2);color:var(--text);font-size:14px;cursor:pointer">Sluiten</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Totaal orders</div><div class="stat-value" id="stTotal">0</div></div>
+    <div class="stat"><div class="stat-label">Deze maand</div><div class="stat-value blue" id="stMonth">0</div></div>
+    <div class="stat"><div class="stat-label">Nog bij MeTaG</div><div class="stat-value red" id="stMetag">0</div></div>
+    <div class="stat"><div class="stat-label">Ingevuld</div><div class="stat-value green" id="stOver">0</div></div>
+  </div>
+
+  <div id="tableContainer">
+    <div class="empty-state"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:18px;font-weight:700">Planning laden…</div></div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://vymmgirljapfvkilqzao.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5bW1naXJsamFwZnZraWxxemFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MzE2NTksImV4cCI6MjA5NDIwNzY1OX0.-GVa02qNafn5eWwUyync9Q1cvPrfGrZe9xWq98onmj8';
+const HEADERS={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+
+const NOW=new Date(),CUR_MONTH=NOW.getMonth(),CUR_YEAR=NOW.getFullYear();
+let allRows=[],currentFilter='all',mijnNaam='',notitieIdx=-1,sortDatumOrder='none';
+
+function isThisMonth(s){if(!s)return false;const p=s.split('-');return parseInt(p[1])-1===CUR_MONTH&&parseInt(p[2])===CUR_YEAR}
+function isOverdue(s){if(!s)return false;const p=s.split('-');const dt=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));const v=new Date();v.setHours(0,0,0,0);return dt<v}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// NAAM
+function initNaam(){
+  const n=localStorage.getItem('goba_wp_naam');
+  if(n){
+    mijnNaam=n;
+    document.getElementById('naamOverlay').style.display='none';
+    document.getElementById('naamTag').textContent='👤 '+n;
+    laad();
+  }
+}
+function slaaNaamOp(){
+  const n=document.getElementById('naamSelect').value;
+  if(!n){alert('Kies eerst je naam');return;}
+  mijnNaam=n;
+  localStorage.setItem('goba_wp_naam',n);
+  document.getElementById('naamOverlay').style.display='none';
+  document.getElementById('naamTag').textContent='👤 '+n;
+  setFilter('mijn',document.getElementById('btnMijn'));
+  laad();
+}
+function wijzigNaam(){
+  const s=document.getElementById('naamSelect');
+  for(let i=0;i<s.options.length;i++){if(s.options[i].value===mijnNaam){s.selectedIndex=i;break;}}
+  document.getElementById('naamOverlay').style.display='flex';
+}
+
+// LADEN
+async function laad(){
+  try{
+    const rows=await fetch(SB_URL+'/rest/v1/planning?order=customer,project,id&limit=1000',{headers:HEADERS}).then(r=>r.json());
+    if(!rows||rows.error){showLeeg();return;}
+    allRows=rows.map(r=>({
+      id:r.id,customer:r.customer,project:r.project,projectName:r.project_name,
+      omschrijving:r.omschrijving,leverdatumStr:r.leverdatum_str,
+      status:r.status,aantal:r.aantal,geleverd:r.geleverd,nogTeLeveren:r.nog_te_leveren,
+      besteld:r.besteld,ontvangen:r.ontvangen,medewerker:r.medewerker||'',
+      metagnr:r.werkbon||'',notitie:r.notitie||'',notitie_wp:r.notitie_wp||'',
+      werkstatus:r.werkstatus||'open',isNew:false,week:r.week
+    }));
+    const week=rows[0]?.week||'?';
+    const pill=document.getElementById('weekPill');
+    pill.style.display='block';pill.textContent='Week '+week;
+    document.getElementById('syncDot').style.background='#4CAF50';
+    updateStats();applyFilter();
+    setInterval(pollingUpdate,20000);
+  }catch(e){
+    document.getElementById('syncDot').style.background='#EF5350';
+    showLeeg('Verbindingsfout — ververs de pagina');
+  }
+}
+
+async function pollingUpdate(){
+  try{
+    const rows=await fetch(SB_URL+'/rest/v1/planning?order=customer,project,id&limit=1000',{headers:HEADERS}).then(r=>r.json());
+    rows.forEach(r=>{
+      const idx=allRows.findIndex(a=>a.id===r.id);
+      if(idx>=0){
+        allRows[idx].medewerker=r.medewerker||'';
+        allRows[idx].notitie=r.notitie||'';
+        allRows[idx].notitie_wp=r.notitie_wp||'';
+        allRows[idx].werkstatus=r.werkstatus||'open';
+      }
+    });
+    updateStats();applyFilter();
+  }catch(e){}
+}
+
+function showLeeg(msg='Nog geen planning beschikbaar'){
+  document.getElementById('tableContainer').innerHTML='<div class="empty-state"><div style="font-size:48px;margin-bottom:12px">📋</div><div style="font-size:18px;font-weight:700">'+msg+'</div></div>';
+}
+
+function updateStats(){
+  document.getElementById('stTotal').textContent=allRows.length;
+  document.getElementById('stMonth').textContent=allRows.filter(r=>isThisMonth(r.leverdatumStr)).length;
+  document.getElementById('stMetag').textContent=allRows.filter(r=>r.besteld==='J'&&r.ontvangen==='N').length;
+  document.getElementById('stOver').textContent=allRows.filter(r=>r.medewerker).length;
+}
+
+function toggleSortDatum(btn){
+  if(sortDatumOrder==='none'||sortDatumOrder==='desc'){
+    sortDatumOrder='asc';btn.textContent='↑ Datum oud→nieuw';btn.classList.add('active');
+  } else if(sortDatumOrder==='asc'){
+    sortDatumOrder='desc';btn.textContent='↓ Datum nieuw→oud';
+  } else {
+    sortDatumOrder='none';btn.textContent='↕ Datum';btn.classList.remove('active');
+  }
+  applyFilter();
+}
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-balk .btn[id^="btn"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');applyFilter();
+}
+
+function applyFilter(){
+  const zoekNaam=(document.getElementById('zoekNaam').value||'').toLowerCase();
+  const zoekOmsch=(document.getElementById('zoekOmsch').value||'').toLowerCase();
+  const zoekWerkbon=(document.getElementById('zoekWerkbon').value||'').toLowerCase();
+  let rows=[...allRows];
+  if(currentFilter==='month')rows=rows.filter(r=>isThisMonth(r.leverdatumStr));
+  if(currentFilter==='metag')rows=rows.filter(r=>r.besteld==='J'&&r.ontvangen==='N');
+  if(currentFilter==='overdue')rows=rows.filter(r=>isOverdue(r.leverdatumStr));
+  if(currentFilter==='mijn'&&mijnNaam)rows=rows.filter(r=>(r.medewerker||'').toLowerCase().includes(mijnNaam.toLowerCase()));
+  if(zoekNaam)rows=rows.filter(r=>(r.medewerker||'').toLowerCase().includes(zoekNaam));
+  if(zoekOmsch)rows=rows.filter(r=>r.customer.toLowerCase().includes(zoekOmsch)||r.omschrijving.toLowerCase().includes(zoekOmsch)||r.project.toLowerCase().includes(zoekOmsch));
+  if(zoekWerkbon)rows=rows.filter(r=>(r.metagnr||'').toLowerCase().includes(zoekWerkbon));
+  // Sorteer op datum
+  if(sortDatumOrder!=='none'){
+    rows.sort((a,b)=>{
+      const toDate=s=>{if(!s)return new Date(9999,0,1);const p=s.split('-');return new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));};
+      return sortDatumOrder==='asc'?toDate(a.leverdatumStr)-toDate(b.leverdatumStr):toDate(b.leverdatumStr)-toDate(a.leverdatumStr);
+    });
+  }
+  renderTable(rows);
+}
+
+function jnBadge(b,o){
+  if(!b&&!o)return'<span class="jn-empty">—</span>';
+  if(b==='J'&&o==='J')return'<span class="jn-badge jn-jj">J J</span>';
+  if(b==='J'&&o==='N')return'<span class="jn-badge jn-jn">J N</span>';
+  if(b==='N'&&o==='J')return'<span class="jn-badge jn-nj">N J</span>';
+  return'<span class="jn-empty">—</span>';
+}
+function statusBadge(s){
+  const map={'6':'s6','7':'s7','8':'s8','9':'s9'};
+  return'<span class="status-badge '+(map[s]||'sX')+'">'+(s||'—')+'</span>';
+}
+
+function renderTable(rows){
+  if(!rows.length){showLeeg('Geen resultaten — pas de filter aan');return;}
+  let html='<div class="table-wrap"><table><thead><tr>'
+    +'<th style="width:130px">Medewerker</th>'
+    +'<th style="width:100px">Leverdatum</th>'
+    +'<th style="width:80px">Werkbon</th>'
+    +'<th>Omschrijving</th>'
+    +'<th style="width:40px">St.</th>'
+    +'<th style="width:50px;text-align:right">Ant.</th>'
+    +'<th style="width:50px;text-align:right">Gel.</th>'
+    +'<th style="width:50px;text-align:right">N.t.l.</th>'
+    +'<th style="width:64px;text-align:center">MeTaG</th>'
+    +'<th style="width:36px;text-align:center">📝</th>'
+    +'<th style="width:160px;text-align:center">Actie</th>'
+    +'</tr></thead><tbody>';
+
+  let curCust='',curProj='';
+  rows.forEach(r=>{
+    if(r.customer!==curCust){
+      curCust=r.customer;curProj='';
+      html+='<tr class="customer-row"><td colspan="11">'+esc(r.customer)+'</td></tr>';
+    }
+    const pk=r.customer+'||'+r.project;
+    if(pk!==curProj){
+      curProj=pk;
+      const jaar='20'+(r.project?r.project.substring(0,2):'26');
+      const klant=r.customer?r.customer.replace(/[<>:"\/\\|?*]/g,''):'';
+      const mapPad=`I:\\Projecten\\${jaar}\\Projecten\\${r.project} ${klant}\\Werk`;
+      const mapPadEsc=mapPad.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      html+='<tr class="project-row"><td colspan="11">'
+        +'<span class="proj-num">Project '+esc(r.project)+'</span> '
+        +'<span class="proj-name">'+esc(r.projectName||'')+'</span>'
+        +'<span onclick="kopieerPad(\''+mapPadEsc+'\',this)" title="Klik om mappad te kopiëren: '+esc(mapPad)+'" '
+        +'style="cursor:pointer;margin-left:8px;font-size:10px;background:#1A2A3A;color:#64B5F6;border:1px solid #64B5F6;border-radius:4px;padding:1px 7px;font-family:\'DM Mono\',monospace;vertical-align:middle">📋 pad</span>'
+        +'</td></tr>';
+    }
+    const overdue=isOverdue(r.leverdatumStr);
+    const ws=r.werkstatus||'open';
+    const hl=ws==='gereed'?'ws-gereed':ws==='bezig'?'ws-bezig':ws==='wacht'?'ws-wacht':isThisMonth(r.leverdatumStr)&&!overdue?'highlight-month':'';
+    const gIdx=allRows.indexOf(r);
+    const medVal=r.medewerker||'';
+    const datumKlasse=overdue?'overdue-datum':'';
+    const heeftNotitie=r.notitie||r.notitie_wp;
+    const notitieTitle=heeftNotitie?'WP: '+(r.notitie_wp||'—')+'\nKantoor: '+(r.notitie||'—'):'Klik om notitie toe te voegen';
+    html+='<tr class="'+hl+'">'
+      +'<td><span class="medew '+(medVal?'':'leeg')+'">'+(medVal||'niet toegewezen')+'</span></td>'
+      +'<td class="'+datumKlasse+'" style="font-family:\'DM Mono\',monospace;font-size:13px">'+esc(r.leverdatumStr)+'</td>'
+      +'<td style="font-family:\'DM Mono\',monospace;font-size:13px;color:var(--text2)">'+esc(r.metagnr)+'</td>'
+      +'<td style="max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.omschrijving)+'">'+esc(r.omschrijving)+'</td>'
+      +'<td>'+statusBadge(r.status)+'</td>'
+      +'<td style="text-align:right;color:var(--text2)">'+(r.aantal||'')+'</td>'
+      +'<td style="text-align:right;font-weight:600;color:'+(r.geleverd>0?'#81C784':'var(--text2)')+';">'+(r.geleverd||'')+'</td>'
+      +'<td style="text-align:right;font-weight:600;color:'+(r.nogTeLeveren>0?'#EF9A9A':'var(--text2)')+';">'+(r.nogTeLeveren||'')+'</td>'
+      +'<td style="text-align:center">'+jnBadge(r.besteld,r.ontvangen)+'</td>'
+      +'<td style="text-align:center"><span onclick="openNotitie('+gIdx+')" '
+      +'title="'+(heeftNotitie?'📝 Notitie aanwezig!\\nWerkplaats: '+(r.notitie_wp||'—')+'\\nKantoor: '+(r.notitie||'—'):'Klik om een notitie toe te voegen')+'" '
+      +'style="cursor:pointer;display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:5px;font-size:11px;font-weight:600;'
+      +(heeftNotitie?'background:#3A1A1A;color:#EF9A9A;border:1px solid #EF5350':'background:transparent;color:var(--text3);border:1px solid var(--border)')+'">📝'
+      +(heeftNotitie?'<span style="margin-left:1px">!</span>':'')
+      +'</span></td>'
+      +'<td style="text-align:center">'+actieKnop(gIdx,ws)+'</td>'
+      +'</tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('tableContainer').innerHTML=html;
+}
+
+function actieKnop(idx,ws){
+  const s='cursor:pointer;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;display:inline-block';
+  const wrap='display:flex;gap:4px;justify-content:center;align-items:center;flex-wrap:nowrap';
+  if(ws==='gereed'){
+    return '<div style="'+wrap+'">'
+      +'<span style="'+s+';background:#1B3A1C;color:#81C784;border:1.5px solid #4CAF50">✅ Gereed</span>'
+      +'<span onclick="setWerkstatus('+idx+',\'open\')" style="'+s+';background:#3A1A1A;color:#EF9A9A;border:1.5px solid #EF5350">↩</span>'
+      +'</div>';
+  }
+  if(ws==='wacht'){
+    return '<div style="'+wrap+'">'
+      +'<span style="'+s+';background:#2A1A3A;color:#CE93D8;border:1.5px solid #CE93D8">⏸</span>'
+      +'<span onclick="setWerkstatus('+idx+',\'bezig\')" style="'+s+';background:#2A1A00;color:#FFB74D;border:1.5px solid #FFB74D">▶</span>'
+      +'<span onclick="setWerkstatus('+idx+',\'gereed\')" style="'+s+';background:#1B3A1C;color:#81C784;border:1.5px solid #4CAF50">✅</span>'
+      +'<span onclick="setWerkstatus('+idx+',\'open\')" style="'+s+';background:#3A1A1A;color:#EF9A9A;border:1.5px solid #EF5350">↩</span>'
+      +'</div>';
+  }
+  if(ws==='bezig'){
+    return '<div style="'+wrap+'">'
+      +'<span onclick="setWerkstatus('+idx+',\'wacht\')" style="'+s+';background:#2A1A3A;color:#CE93D8;border:1.5px solid #CE93D8">⏸</span>'
+      +'<span onclick="setWerkstatus('+idx+',\'gereed\')" style="'+s+';background:#1B3A1C;color:#81C784;border:1.5px solid #4CAF50">✅</span>'
+      +'<span onclick="setWerkstatus('+idx+',\'open\')" style="'+s+';background:#3A1A1A;color:#EF9A9A;border:1.5px solid #EF5350">↩</span>'
+      +'</div>';
+  }
+  return '<div style="'+wrap+'">'
+    +'<span onclick="setWerkstatus('+idx+',\'bezig\')" style="'+s+';background:#2A1A00;color:#FFB74D;border:1.5px solid #FFB74D">⚡ Pak op</span>'
+    +'</div>';
+}
+
+async function setWerkstatus(idx,status){
+  const r=allRows[idx];
+  allRows[idx].werkstatus=status;
+  let nieuweMed=r.medewerker||'';
+  
+  // Pak op: voeg eigen naam toe als die er nog niet bij staat
+  if(status==='bezig'&&mijnNaam){
+    const namen=nieuweMed.split(',').map(n=>n.trim()).filter(Boolean);
+    if(!namen.some(n=>n.toLowerCase()===mijnNaam.toLowerCase())){
+      namen.push(mijnNaam);
+    }
+    nieuweMed=namen.join(', ');
+  }
+  // Doorgeven: verwijder eigen naam, laat anderen staan
+  if(status==='open'&&mijnNaam){
+    const namen=nieuweMed.split(',').map(n=>n.trim()).filter(n=>n.toLowerCase()!==mijnNaam.toLowerCase());
+    nieuweMed=namen.join(', ');
+    if(!nieuweMed) status='open';
+  }
+  
+  allRows[idx].medewerker=nieuweMed;
+  try{
+    const patch={werkstatus:status,medewerker:nieuweMed,updated_at:new Date().toISOString()};
+    await fetch(SB_URL+'/rest/v1/planning?id=eq.'+encodeURIComponent(r.id),{
+      method:'PATCH',headers:HEADERS,body:JSON.stringify(patch)
+    });
+  }catch(e){console.error(e);}
+  applyFilter();
+}
+
+// KOPIEER PAD
+function kopieerPad(pad,el){
+  navigator.clipboard.writeText(pad).then(()=>{
+    const orig=el.innerHTML;
+    el.innerHTML='✅ gekopieerd!';
+    el.style.background='#1B3A1C';el.style.color='#81C784';el.style.borderColor='#4CAF50';
+    setTimeout(()=>{el.innerHTML=orig;el.style.background='#1A2A3A';el.style.color='#64B5F6';el.style.borderColor='#64B5F6';},2000);
+  }).catch(()=>{prompt('Kopieer dit pad:',pad);});
+}
+
+// QR SCANNER
+let qrStream=null,qrInterval=null;
+
+async function openQR(){
+  document.getElementById('qrOverlay').style.display='flex';
+  const video=document.getElementById('qrVideo');
+  const status=document.getElementById('qrStatus');
+  try{
+    // Forceer achtercamera
+    const stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{exact:'environment'},width:{ideal:1280},height:{ideal:720}}
+    }).catch(()=>navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}));
+    qrStream=stream;
+    video.srcObject=stream;
+    await video.play();
+    status.textContent='Houd QR code voor de camera…';
+    // Laad jsQR library
+    if(!window.jsQR){
+      await new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+        s.onload=res;s.onerror=rej;
+        document.head.appendChild(s);
+      });
+    }
+    qrInterval=setInterval(()=>scanFrame(video),300);
+  }catch(e){
+    status.textContent='Camera niet beschikbaar. Typ werkbonnummer handmatig.';
+  }
+}
+
+function scanFrame(video){
+  if(!video.videoWidth||!video.videoHeight||!window.jsQR)return;
+  const canvas=document.getElementById('qrCanvas');
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(video,0,0);
+  const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+  const code=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'dontInvert'});
+  if(code){verwerkScan(code.data);}
+}
+
+function verwerkScan(waarde){
+  sluitQR();
+  // Haal werkbonnummer op — alleen cijfers
+  const match=waarde.match(/\d{6,8}/);
+  const nummer=match?match[0]:waarde.replace(/\D/g,'');
+  if(nummer){
+    document.getElementById('zoekWerkbon').value=nummer;
+    currentFilter='all';
+    document.querySelectorAll('.filter-balk .btn[id^="btn"]').forEach(b=>b.classList.remove('active'));
+    document.getElementById('btnAll').classList.add('active');
+    applyFilter();
+  }
+}
+
+function sluitQR(){
+  if(qrInterval){clearInterval(qrInterval);qrInterval=null;}
+  if(qrStream){qrStream.getTracks().forEach(t=>t.stop());qrStream=null;}
+  document.getElementById('qrOverlay').style.display='none';
+}
+
+// NOTITIE
+function openNotitie(idx){
+  notitieIdx=idx;
+  const r=allRows[idx];
+  document.getElementById('notitieTitle').textContent=r.omschrijving||r.project;
+  document.getElementById('notitieSubtitle').textContent='Project '+r.project+' — '+r.customer;
+  document.getElementById('notitieWpInput').value=r.notitie_wp||'';
+  const kWrap=document.getElementById('kantoorNotitieWrap');
+  if(r.notitie){
+    kWrap.style.display='block';
+    document.getElementById('kantoorNotitieText').textContent=r.notitie;
+  }else{
+    kWrap.style.display='none';
+  }
+  document.getElementById('notitieOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('notitieWpInput').focus(),100);
+}
+function sluitNotitie(){
+  document.getElementById('notitieOverlay').classList.remove('open');
+  notitieIdx=-1;
+}
+async function slaNotitieWpOp(){
+  if(notitieIdx<0)return;
+  const val=document.getElementById('notitieWpInput').value.trim();
+  allRows[notitieIdx].notitie_wp=val;
+  try{
+    await fetch(SB_URL+'/rest/v1/planning?id=eq.'+encodeURIComponent(allRows[notitieIdx].id),{
+      method:'PATCH',headers:HEADERS,
+      body:JSON.stringify({notitie_wp:val,updated_at:new Date().toISOString()})
+    });
+  }catch(e){console.error(e);}
+  sluitNotitie();
+  applyFilter();
+}
+
+initNaam();
+</script>
+</body>
+</html>
